@@ -1,0 +1,192 @@
+import javax.swing.*; // Import Swing components for GUI
+import java.awt.*; // Import AWT for layout and event handling
+import java.awt.event.ActionEvent; // Import ActionEvent for button actions
+import java.awt.event.ActionListener; // Import ActionListener interface for handling actions
+import java.util.Collections; // Import Collections for sorting
+import java.util.Comparator; // Import Comparator for custom sorting
+import java.util.Iterator; // Import Iterator for iterating through the contact list
+import java.util.LinkedList; // Import LinkedList for storing contacts
+
+public class PhoneBookGUI extends JFrame {
+    // List to store contacts
+    private static LinkedList<Contact> contactList = new LinkedList<>();
+    private JTextArea displayArea; // Area to display contacts and messages
+    private JTextField nameField;   // Input field for contact name
+    private JTextField phoneField;  // Input field for contact phone number
+
+    public PhoneBookGUI() {
+        // Set up the main window
+        setTitle("Phone Book"); // Title of the window
+        setSize(400, 400); // Size of the window
+        setDefaultCloseOperation(EXIT_ON_CLOSE); // Exit on close
+        setLayout(new BorderLayout()); // Set layout manager
+
+        // Create input panel and components
+        JPanel inputPanel = new JPanel(); // Panel for input fields and buttons
+        nameField = new JTextField(15); // Input field for name
+        phoneField = new JTextField(15); // Input field for phone number
+
+        // Buttons for various actions
+        JButton insertButton = new JButton("Insert Contact");
+        JButton searchButton = new JButton("Search Contact");
+        JButton displayButton = new JButton("Display All Contacts");
+        JButton deleteButton = new JButton("Delete Contact");
+        JButton updateButton = new JButton("Update Contact");
+        JButton sortButton = new JButton("Sort Contacts");
+
+        displayArea = new JTextArea(); // Area to display results
+        displayArea.setEditable(false); // Make it read-only
+
+        // Add action listeners for button clicks
+        insertButton.addActionListener(new InsertContactAction());
+        searchButton.addActionListener(new SearchContactAction());
+        displayButton.addActionListener(new DisplayContactsAction());
+        deleteButton.addActionListener(new DeleteContactAction());
+        updateButton.addActionListener(new UpdateContactAction());
+        sortButton.addActionListener(new SortContactAction());
+
+        // Add components to the input panel
+        inputPanel.add(new JLabel("Name:")); // Label for name
+        inputPanel.add(nameField);           // Add name input field
+        inputPanel.add(new JLabel("Phone Number:")); // Label for phone number
+        inputPanel.add(phoneField);           // Add phone number input field
+        inputPanel.add(insertButton);         // Add insert button
+        inputPanel.add(searchButton);         // Add search button
+        inputPanel.add(displayButton);        // Add display button
+        inputPanel.add(deleteButton);         // Add delete button
+        inputPanel.add(updateButton);         // Add update button
+        inputPanel.add(sortButton);           // Add sort button
+        // Add input panel and display area to the main window
+        add(inputPanel, BorderLayout.NORTH); // Position input panel at the top
+        add(new JScrollPane(displayArea), BorderLayout.CENTER); // Add scrollable display area
+
+        setVisible(true); // Make the window visible
+    }
+
+    // Inner class to represent a contact
+    private static class Contact {
+        String name;         // Contact name
+        String phoneNumber;  // Contact phone number
+
+        // Constructor to create a contact
+        Contact(String name, String phoneNumber) {
+            this.name = name; // Set name
+            this.phoneNumber = phoneNumber; // Set phone number
+        }
+    }
+
+    // Action listener for inserting a new contact
+    private class InsertContactAction implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            String name = nameField.getText().trim(); // Get input name
+            String phoneNumber = phoneField.getText().trim(); // Get input phone number
+
+            // Check if the contact already exists
+            for (Contact contact : contactList) {
+                if (contact.name.equals(name)) {
+                    displayArea.setText("Contact already exists."); // Show message if exists
+                    return; // Exit method
+                }
+            }
+
+            // Add new contact to the list
+            contactList.add(new Contact(name, phoneNumber));
+            displayArea.setText("Contact added."); // Show confirmation
+            clearFields(); // Clear input fields
+        }
+    }
+
+    // Action listener for searching a contact by name
+    private class SearchContactAction implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            String searchName = nameField.getText().trim(); // Get the name to search
+            // Search through the contact list
+            for (Contact contact : contactList) {
+                if (contact.name.equals(searchName)) {
+                    displayArea.setText(contact.name + ": " + contact.phoneNumber); // Display found contact
+                    return; // Exit method
+                }
+            }
+            displayArea.setText("Contact not found."); // Show message if not found
+        }
+    }
+
+    // Action listener for displaying all contacts
+    private class DisplayContactsAction implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            StringBuilder displayText = new StringBuilder("Phonebook:\n"); // Start display text
+            if (contactList.isEmpty()) {
+                displayText.append("No contacts available."); // Show if no contacts
+            } else {
+                // List all contacts
+                for (Contact contact : contactList) {
+                    displayText.append(contact.name).append(": ").append(contact.phoneNumber).append("\n");
+                }
+            }
+            displayArea.setText(displayText.toString()); // Display all contacts
+        }
+    }
+
+    // Action listener for deleting a contact by name
+    private class DeleteContactAction implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            String name = nameField.getText().trim(); // Get the name to delete
+            Iterator<Contact> iterator = contactList.iterator(); // Iterator for the list
+            // Iterate through contacts
+            while (iterator.hasNext()) {
+                Contact contact = iterator.next();
+                if (contact.name.equals(name)) {
+                    iterator.remove(); // Remove contact from list
+                    displayArea.setText("Contact deleted."); // Show confirmation
+                    clearFields(); // Clear input fields
+                    return; // Exit method
+                }
+            }
+            displayArea.setText("Contact not found."); // Show message if not found
+        }
+    }
+
+    // Action listener for updating a contact's phone number
+    private class UpdateContactAction implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            String name = nameField.getText().trim(); // Get the name to update
+            // Search through the contact list
+            for (Contact contact : contactList) {
+                if (contact.name.equals(name)) {
+                    String newPhoneNumber = phoneField.getText().trim(); // Get new phone number
+                    contact.phoneNumber = newPhoneNumber; // Update phone number
+                    displayArea.setText("Contact updated."); // Show confirmation
+                    clearFields(); // Clear input fields
+                    return; // Exit method
+                }
+            }
+            displayArea.setText("Contact not found."); // Show message if not found
+        }
+    }
+
+    // Action listener for sorting contacts alphabetically by name
+    private class SortContactAction implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            // Sort the contact list by name in ascending order
+            Collections.sort(contactList, new Comparator<Contact>() {
+                @Override
+                public int compare(Contact c1, Contact c2) {
+                    return c1.name.compareToIgnoreCase(c2.name); // Compare names ignoring case
+                }
+            });
+
+            displayArea.setText("Contacts sorted alphabetically."); // Show confirmation
+        }
+    }
+
+    // Method to clear input fields
+    private void clearFields() {
+        nameField.setText(""); // Clear name field
+        phoneField.setText(""); // Clear phone field
+    }
+
+    // Main method to run the application
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(PhoneBookGUI::new); // Launch GUI on the Event Dispatch Thread
+    }
+}
